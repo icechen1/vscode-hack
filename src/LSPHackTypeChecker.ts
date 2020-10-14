@@ -17,6 +17,7 @@ import * as hack from "./types/hack";
 import * as utils from "./Utils";
 import * as providers from "./providers";
 import * as suppressions from "./suppressions";
+import * as quickfix from "./quickfix";
 import { ShowStatusRequest } from "./types/lsp";
 
 export class LSPHackTypeChecker {
@@ -40,6 +41,13 @@ export class LSPHackTypeChecker {
           scheme: "file"
         },
         new providers.HackCodeActionProvider()
+      ),
+      vscode.languages.registerCodeActionsProvider(
+        {
+          language: "hack",
+          scheme: "file"
+        },
+        new providers.HackUnboundNameActionProvider()
       )
     );
 
@@ -47,6 +55,12 @@ export class LSPHackTypeChecker {
       vscode.commands.registerCommand(
         "hack.suppressError",
         suppressions.suppressError
+      )
+    );
+    context.subscriptions.push(
+      vscode.commands.registerCommand(
+        "hack.unboundNameSuggest",
+        quickfix.unboundNameSuggest
       )
     );
   }

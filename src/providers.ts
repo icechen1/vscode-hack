@@ -367,3 +367,37 @@ export class HackCodeActionProvider implements vscode.CodeActionProvider {
     return undefined;
   }
 }
+
+export class HackUnboundNameActionProvider implements vscode.CodeActionProvider {
+  public provideCodeActions(
+    document: vscode.TextDocument,
+    _: vscode.Range,
+    context: vscode.CodeActionContext
+  ): vscode.ProviderResult<vscode.Command[]> {
+    const filteredErrors = context.diagnostics.filter(
+      d => d.source === "Hack" && d.code === 2049
+    );
+    if (filteredErrors.length > 0) {
+      const commands: vscode.Command[] = [];
+      for (const error of filteredErrors) {
+        const fullLine = document.lineAt(error.range.start.line);
+        let text = fullLine.text.substr(error.range.start.character, error.range.end.character - error.range.start.character);
+        return hh_client
+        .search(text)
+        .then(foundRefs => {
+          for (const ref of foundRefs) {
+            commands.push({
+              title: `Suggested: ${ref.name}`,
+              command: "hack.unboundNameSuggest",
+              arguments: [document, error, ref.name]
+            });
+          }
+          return commands;
+        });
+      }
+    }
+    return undefined;
+  }
+}
+
+
